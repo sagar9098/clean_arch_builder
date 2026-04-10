@@ -9,3 +9,6 @@
 - Added project scaffold commands: `init` and `setup_project`.
 - Added shared base generation for `lib/config`, `lib/core`, and `lib/shared`.
 - Updated feature templates to reuse shared base files instead of duplicating core logic.
+
+## 1.1.0
+- some bug fixes
