@@ -12,3 +12,7 @@
 
 ## 1.1.0
 - some bug fixes
+
+## 1.2.0
+- some bug fixes
+- dio support

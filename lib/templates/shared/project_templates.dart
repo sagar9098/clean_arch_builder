@@ -1,6 +1,9 @@
+/// Builds project-level templates shared by generated features.
 library;
 
+/// Produces required base files created by `clean_arch_builder init`.
 class ProjectTemplates {
+  /// Builds all required project initialization files.
   static Map<String, String> buildProjectFiles() {
     return <String, String>{
       'lib/config/app_config.dart': _buildAppConfigFile(),
@@ -11,6 +14,7 @@ class ProjectTemplates {
     };
   }
 
+  /// Builds the `app_config.dart` generated file.
   static String _buildAppConfigFile() {
     return '''library;
 
@@ -22,6 +26,7 @@ class AppConfig {
   static const String apiVersion = '/v1';
 
   static String baseUrl() {
+    // Resolves active base url
     return EnvConfig.isProduction
         ? EnvConfig.productionBaseUrl
         : EnvConfig.developmentBaseUrl;
@@ -30,6 +35,7 @@ class AppConfig {
 ''';
   }
 
+  /// Builds the `env_config.dart` generated file.
   static String _buildEnvConfigFile() {
     return '''library;
 
@@ -43,6 +49,7 @@ class EnvConfig {
 ''';
   }
 
+  /// Builds the `failure.dart` generated file.
   static String _buildFailureFile() {
     return '''library;
 
@@ -53,6 +60,7 @@ abstract class Failure {
   final String message;
   @override
   String toString() {
+    // Returns readable failure message
     return message;
   }
 }
@@ -70,6 +78,7 @@ class UnknownFailure extends Failure {
 }
 
 Failure mapDioExceptionToFailure(DioException exception) {
+  // Maps dio exception to failure
   switch (exception.type) {
     case DioExceptionType.connectionTimeout:
     case DioExceptionType.sendTimeout:
@@ -81,15 +90,16 @@ Failure mapDioExceptionToFailure(DioException exception) {
     case DioExceptionType.cancel:
       return NetworkFailure('Request was cancelled');
     case DioExceptionType.unknown:
-      return NetworkFailure(exception.message ?? 'Network failure');
-    case DioExceptionType.badCertificate:
+      return UnknownFailure(exception.message ?? 'Unknown failure');
     case DioExceptionType.connectionError:
+    case DioExceptionType.badCertificate:
       return NetworkFailure(exception.message ?? 'Network failure');
   }
 }
 ''';
   }
 
+  /// Builds the `either.dart` generated file.
   static String _buildEitherFile() {
     return '''library;
 
@@ -108,6 +118,7 @@ class Left<L, R> extends Either<L, R> {
     required T Function(L left) onLeft,
     required T Function(R right) onRight,
   }) {
+    // Resolves left branch
     return onLeft(value);
   }
 }
@@ -119,12 +130,14 @@ class Right<L, R> extends Either<L, R> {
     required T Function(L left) onLeft,
     required T Function(R right) onRight,
   }) {
+    // Resolves right branch
     return onRight(value);
   }
 }
 ''';
   }
 
+  /// Builds the `api_client.dart` generated file.
   static String _buildApiClientFile() {
     return '''library;
 
@@ -146,9 +159,12 @@ class ApiClient {
             headers: <String, String>{'Content-Type': 'application/json'},
           ),
         ) {
+    // Adds auth interceptor
     dio.interceptors.add(AuthInterceptor(tokenProvider));
+    // Adds error interceptor
     dio.interceptors.add(ErrorInterceptor());
     if (kDebugMode) {
+      // Adds debug logging interceptor
       dio.interceptors.add(
         LogInterceptor(
           requestBody: true,
@@ -173,6 +189,7 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    // Injects bearer token when available
     final String? token = await _tokenProvider();
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer \$token';
@@ -184,6 +201,7 @@ class AuthInterceptor extends Interceptor {
 class ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    // Propagates dio error through pipeline
     handler.next(err);
   }
 }

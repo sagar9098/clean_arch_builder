@@ -1,9 +1,12 @@
+/// Builds Bloc-specific template files for generated features.
 library;
 
 import '../../generators/naming_convention.dart';
 import '../shared/state_template_output.dart';
 
+/// Generates presentation files for Bloc/Cubit-based state management.
 class BlocTemplates {
+  /// Builds all Bloc template outputs for a feature.
   static StateTemplateOutput build(FeatureNaming naming) {
     return StateTemplateOutput(
       filesByRelativePath: <String, String>{
@@ -19,6 +22,7 @@ class BlocTemplates {
     );
   }
 
+  /// Builds the generated Bloc state/controller file.
   static String _buildBlocFile(FeatureNaming naming) {
     return '''library;
 
@@ -28,7 +32,6 @@ import '../../domain/entities/${naming.snakeCase}_entity.dart';
 import '../../domain/usecases/get_${naming.snakeCase}_items_use_case.dart';
 
 class ${naming.pascalCase}State {
-  // Initializes state payload
   const ${naming.pascalCase}State({
     required this.isLoading,
     required this.errorMessage,
@@ -62,7 +65,6 @@ class ${naming.pascalCase}State {
 }
 
 class ${naming.pascalCase}Bloc extends Cubit<${naming.pascalCase}State> {
-  // Initializes bloc dependency
   ${naming.pascalCase}Bloc({
     required Get${naming.pascalCase}ItemsUseCase get${naming.pascalCase}ItemsUseCase,
   })  : _get${naming.pascalCase}ItemsUseCase = get${naming.pascalCase}ItemsUseCase,
@@ -99,6 +101,7 @@ class ${naming.pascalCase}Bloc extends Cubit<${naming.pascalCase}State> {
 ''';
   }
 
+  /// Builds the generated Bloc page file.
   static String _buildPageFile(FeatureNaming naming) {
     return '''library;
 
@@ -110,7 +113,6 @@ import '../bloc/${naming.snakeCase}_bloc.dart';
 import '../widgets/${naming.snakeCase}_view.dart';
 
 class ${naming.pascalCase}Page extends StatelessWidget {
-  // Initializes feature page
   const ${naming.pascalCase}Page({super.key});
   // Builds bloc page UI
   @override

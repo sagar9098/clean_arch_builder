@@ -1,19 +1,27 @@
+/// Builds shared feature templates used across all state-management styles.
 library;
 
 import '../../generators/generation_options.dart';
 import '../../generators/naming_convention.dart';
 
+/// Carries data-source class and file metadata for template composition.
 class DataSourceTemplateMetadata {
+  /// Creates immutable data-source metadata.
   const DataSourceTemplateMetadata({
     required this.className,
     required this.fileName,
   });
 
+  /// Generated data-source class name.
   final String className;
+
+  /// Generated data-source file name.
   final String fileName;
 }
 
+/// Builds non-state feature files for clean architecture layers.
 class CommonTemplates {
+  /// Resolves data-source metadata for the selected source type.
   static DataSourceTemplateMetadata resolveDataSourceMetadata(
     FeatureNaming naming,
     DataSourceType dataSourceType,
@@ -37,6 +45,7 @@ class CommonTemplates {
     }
   }
 
+  /// Builds all non-state files for one feature.
   static Map<String, String> buildSharedFiles({
     required FeatureNaming naming,
     required DataSourceType dataSourceType,
@@ -46,7 +55,6 @@ class CommonTemplates {
   }) {
     final DataSourceTemplateMetadata dataSourceMetadata =
         resolveDataSourceMetadata(naming, dataSourceType);
-
     return <String, String>{
       'domain/entities/${naming.snakeCase}_entity.dart':
           buildEntityTemplate(naming),
@@ -71,6 +79,7 @@ class CommonTemplates {
     };
   }
 
+  /// Builds the generated domain entity file.
   static String buildEntityTemplate(FeatureNaming naming) {
     return '''library;
 
@@ -79,12 +88,14 @@ class ${naming.pascalCase}Entity {
     required this.id,
     required this.title,
   });
+
   final String id;
   final String title;
 }
 ''';
   }
 
+  /// Builds the generated repository contract file.
   static String buildRepositoryContractTemplate(FeatureNaming naming) {
     return '''library;
 
@@ -98,6 +109,7 @@ abstract class ${naming.pascalCase}Repository {
 ''';
   }
 
+  /// Builds the generated use-case file.
   static String buildUseCaseTemplate(FeatureNaming naming) {
     return '''library;
 
@@ -110,14 +122,18 @@ class Get${naming.pascalCase}ItemsUseCase {
   const Get${naming.pascalCase}ItemsUseCase({
     required ${naming.pascalCase}Repository repository,
   }) : _repository = repository;
+
   final ${naming.pascalCase}Repository _repository;
+
   Future<Either<Failure, List<${naming.pascalCase}Entity>>> call() {
+    // Executes use case
     return _repository.get${naming.pascalCase}Items();
   }
 }
 ''';
   }
 
+  /// Builds the generated model file.
   static String buildModelTemplate(FeatureNaming naming) {
     return '''library;
 
@@ -128,32 +144,24 @@ class ${naming.pascalCase}Model extends ${naming.pascalCase}Entity {
     required super.id,
     required super.title,
   });
+
   factory ${naming.pascalCase}Model.fromMap(Map<String, dynamic> map) {
-    final Object? idValue = map['id'];
-    final Object? titleValue = map['title'];
-
-    if (idValue == null || titleValue == null) {
-      throw const FormatException(
-        'Invalid payload. Required keys: id, title.',
-      );
-    }
-
+    // Parses model from map
     return ${naming.pascalCase}Model(
-      id: idValue.toString(),
-      title: titleValue.toString(),
+      id: map['id'].toString(),
+      title: map['title'].toString(),
     );
   }
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'id': id,
-      'title': title,
-    };
+    // Converts model to map
+    return <String, dynamic>{'id': id, 'title': title};
   }
 }
 ''';
   }
 
+  /// Builds the generated data-source file by source type.
   static String buildDataSourceTemplate(
     FeatureNaming naming,
     DataSourceType dataSourceType,
@@ -168,13 +176,13 @@ class ${naming.pascalCase}Model extends ${naming.pascalCase}Entity {
     }
   }
 
+  /// Builds the generated repository implementation file.
   static String buildRepositoryImplementationTemplate(
     FeatureNaming naming,
     DataSourceType dataSourceType,
   ) {
     final DataSourceTemplateMetadata metadata =
         resolveDataSourceMetadata(naming, dataSourceType);
-
     return '''library;
 
 import 'package:dio/dio.dart';
@@ -183,22 +191,24 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/result/either.dart';
 import '../../domain/entities/${naming.snakeCase}_entity.dart';
 import '../../domain/repositories/${naming.snakeCase}_repository.dart';
-import '../datasources/${metadata.fileName}'; 
+import '../datasources/${metadata.fileName}';
 import '../models/${naming.snakeCase}_model.dart';
 
 class ${naming.pascalCase}RepositoryImpl implements ${naming.pascalCase}Repository {
   const ${naming.pascalCase}RepositoryImpl({
     required ${metadata.className} dataSource,
   }) : _dataSource = dataSource;
+
   final ${metadata.className} _dataSource;
+
   @override
   Future<Either<Failure, List<${naming.pascalCase}Entity>>> get${naming.pascalCase}Items() async {
+    // Maps data source output to domain entities
     try {
       final List<Map<String, dynamic>> rawItems = await _dataSource.fetch${naming.pascalCase}Items();
       final List<${naming.pascalCase}Entity> entities = rawItems
           .map<${naming.pascalCase}Entity>(${naming.pascalCase}Model.fromMap)
           .toList(growable: false);
-
       return Right<Failure, List<${naming.pascalCase}Entity>>(entities);
     } on DioException catch (exception) {
       return Left<Failure, List<${naming.pascalCase}Entity>>(
@@ -214,10 +224,12 @@ class ${naming.pascalCase}RepositoryImpl implements ${naming.pascalCase}Reposito
 ''';
   }
 
+  /// Builds the generated presentation view file.
   static String buildViewTemplate(FeatureNaming naming) {
     return '''library;
 
 import 'package:flutter/material.dart';
+
 import '../../domain/entities/${naming.snakeCase}_entity.dart';
 
 class ${naming.pascalCase}View extends StatelessWidget {
@@ -228,12 +240,15 @@ class ${naming.pascalCase}View extends StatelessWidget {
     required this.onRetry,
     super.key,
   });
+
   final bool isLoading;
   final String? errorMessage;
   final List<${naming.pascalCase}Entity> items;
   final VoidCallback onRetry;
+
   @override
   Widget build(BuildContext context) {
+    // Builds current view state
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -255,6 +270,7 @@ class ${naming.pascalCase}View extends StatelessWidget {
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (BuildContext context, int index) {
+        // Builds one list item
         final ${naming.pascalCase}Entity item = items[index];
         return ListTile(
           title: Text(item.title),
@@ -267,6 +283,7 @@ class ${naming.pascalCase}View extends StatelessWidget {
 ''';
   }
 
+  /// Builds the generated feature dependency registration file.
   static String buildDependencyInjectionTemplate({
     required FeatureNaming naming,
     required DataSourceType dataSourceType,
@@ -276,7 +293,6 @@ class ${naming.pascalCase}View extends StatelessWidget {
   }) {
     final DataSourceTemplateMetadata metadata =
         resolveDataSourceMetadata(naming, dataSourceType);
-
     return '''library;
 
 import 'package:get_it/get_it.dart';
@@ -292,6 +308,7 @@ import '$stateFileImportPath';
 final GetIt sl = GetIt.instance;
 
 Future<void> init${naming.pascalCase}Dependencies() async {
+  // Registers feature dependency graph
 ${_buildApiClientRegistrationSnippet(dataSourceType)}
 ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
   if (!sl.isRegistered<${naming.pascalCase}Repository>()) {
@@ -299,13 +316,11 @@ ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
       () => ${naming.pascalCase}RepositoryImpl(dataSource: sl()),
     );
   }
-
   if (!sl.isRegistered<Get${naming.pascalCase}ItemsUseCase>()) {
     sl.registerLazySingleton<Get${naming.pascalCase}ItemsUseCase>(
       () => Get${naming.pascalCase}ItemsUseCase(repository: sl()),
     );
   }
-
   if (!sl.isRegistered<$stateClassName>()) {
     sl.registerFactory<$stateClassName>(() => $stateFactoryExpression);
   }
@@ -313,6 +328,7 @@ ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
 ''';
   }
 
+  /// Builds data-source registration snippet for generated DI.
   static String _buildDataSourceRegistrationSnippet(
     DataSourceTemplateMetadata metadata,
     DataSourceType dataSourceType,
@@ -336,6 +352,7 @@ ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
     }
   }
 
+  /// Builds core imports used by generated DI.
   static String _buildDependencyInjectionCoreImports(
     DataSourceType dataSourceType,
   ) {
@@ -349,6 +366,7 @@ ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
     }
   }
 
+  /// Builds API client registration snippet for generated DI.
   static String _buildApiClientRegistrationSnippet(
     DataSourceType dataSourceType,
   ) {
@@ -369,8 +387,11 @@ ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
     }
   }
 
+  /// Builds generated REST data source file.
   static String _buildRestDataSourceTemplate(FeatureNaming naming) {
     return '''library;
+
+import 'package:dio/dio.dart';
 
 import '../../../../config/app_config.dart';
 import '../../../../core/network/api_client.dart';
@@ -383,6 +404,7 @@ class ${naming.pascalCase}RestDataSource {
   final ApiClient _apiClient;
 
   Future<List<Map<String, dynamic>>> fetch${naming.pascalCase}Items() async {
+    // Fetches remote items
     final String endpointPath = '\${AppConfig.apiVersion}/${naming.snakeCase}';
     final Response<dynamic> response = await _apiClient.dio.get(endpointPath);
     final dynamic data = response.data;
@@ -403,6 +425,7 @@ class ${naming.pascalCase}RestDataSource {
 ''';
   }
 
+  /// Builds generated Firebase data source file.
   static String _buildFirebaseDataSourceTemplate(FeatureNaming naming) {
     return '''library;
 
@@ -410,12 +433,14 @@ class ${naming.pascalCase}FirebaseDataSource {
   const ${naming.pascalCase}FirebaseDataSource();
 
   Future<List<Map<String, dynamic>>> fetch${naming.pascalCase}Items() async {
+    // Throws when firebase source is unconfigured
     throw UnsupportedError('Firebase source is not configured.');
   }
 }
 ''';
   }
 
+  /// Builds generated local data source file.
   static String _buildLocalDataSourceTemplate(FeatureNaming naming) {
     return '''library;
 
@@ -423,6 +448,7 @@ class ${naming.pascalCase}LocalDataSource {
   const ${naming.pascalCase}LocalDataSource();
 
   Future<List<Map<String, dynamic>>> fetch${naming.pascalCase}Items() async {
+    // Throws when local source is unconfigured
     throw UnsupportedError('Local source is not configured.');
   }
 }

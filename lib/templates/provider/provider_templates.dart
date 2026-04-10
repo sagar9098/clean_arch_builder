@@ -1,9 +1,12 @@
+/// Builds Provider-specific template files for generated features.
 library;
 
 import '../../generators/naming_convention.dart';
 import '../shared/state_template_output.dart';
 
+/// Generates presentation files for Provider-based state management.
 class ProviderTemplates {
+  /// Builds all Provider template outputs for a feature.
   static StateTemplateOutput build(FeatureNaming naming) {
     return StateTemplateOutput(
       filesByRelativePath: <String, String>{
@@ -20,6 +23,7 @@ class ProviderTemplates {
     );
   }
 
+  /// Builds the generated Provider controller file.
   static String _buildProviderFile(FeatureNaming naming) {
     return '''library;
 
@@ -29,7 +33,6 @@ import '../../domain/entities/${naming.snakeCase}_entity.dart';
 import '../../domain/usecases/get_${naming.snakeCase}_items_use_case.dart';
 
 class ${naming.pascalCase}Provider extends ChangeNotifier {
-  // Initializes provider dependency
   ${naming.pascalCase}Provider({
     required Get${naming.pascalCase}ItemsUseCase get${naming.pascalCase}ItemsUseCase,
   }) : _get${naming.pascalCase}ItemsUseCase = get${naming.pascalCase}ItemsUseCase;
@@ -69,6 +72,7 @@ class ${naming.pascalCase}Provider extends ChangeNotifier {
 ''';
   }
 
+  /// Builds the generated Provider page file.
   static String _buildPageFile(FeatureNaming naming) {
     return '''library;
 
@@ -80,7 +84,6 @@ import '../providers/${naming.snakeCase}_provider.dart';
 import '../widgets/${naming.snakeCase}_view.dart';
 
 class ${naming.pascalCase}Page extends StatelessWidget {
-  // Initializes feature page
   const ${naming.pascalCase}Page({super.key});
 
   // Builds provider page UI

@@ -1,9 +1,12 @@
+/// Builds GetX-specific template files for generated features.
 library;
 
 import '../../generators/naming_convention.dart';
 import '../shared/state_template_output.dart';
 
+/// Generates presentation files for GetX-based state management.
 class GetxTemplates {
+  /// Builds all GetX template outputs for a feature.
   static StateTemplateOutput build(FeatureNaming naming) {
     return StateTemplateOutput(
       filesByRelativePath: <String, String>{
@@ -20,6 +23,7 @@ class GetxTemplates {
     );
   }
 
+  /// Builds the generated GetX controller file.
   static String _buildControllerFile(FeatureNaming naming) {
     return '''library;
 
@@ -29,7 +33,6 @@ import '../../domain/entities/${naming.snakeCase}_entity.dart';
 import '../../domain/usecases/get_${naming.snakeCase}_items_use_case.dart';
 
 class ${naming.pascalCase}Controller extends GetxController {
-  // Initializes controller dependency
   ${naming.pascalCase}Controller({
     required Get${naming.pascalCase}ItemsUseCase get${naming.pascalCase}ItemsUseCase,
   }) : _get${naming.pascalCase}ItemsUseCase = get${naming.pascalCase}ItemsUseCase;
@@ -65,6 +68,7 @@ class ${naming.pascalCase}Controller extends GetxController {
 ''';
   }
 
+  /// Builds the generated GetX page file.
   static String _buildPageFile(FeatureNaming naming) {
     return '''library;
 
@@ -76,7 +80,6 @@ import '../getx/${naming.snakeCase}_controller.dart';
 import '../widgets/${naming.snakeCase}_view.dart';
 
 class ${naming.pascalCase}Page extends StatelessWidget {
-  // Initializes feature page
   const ${naming.pascalCase}Page({super.key});
   // Builds getx page UI
   @override
