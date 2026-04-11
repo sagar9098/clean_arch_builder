@@ -28,7 +28,7 @@ This keeps features lightweight and avoids duplicated boilerplate.
   - `local`
 - Safe file creation (no overwrite)
 - Auto naming conversion (`auth` -> `Auth`, `auth_repository.dart`, etc.)
-- Full `///` documentation in generated files
+
 
 ## Installation
 

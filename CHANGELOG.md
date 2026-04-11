@@ -16,3 +16,7 @@
 ## 1.2.0
 - some bug fixes
 - dio support
+- 
+## 1.2.1
+- some bug fixes
+- remove unwanted files

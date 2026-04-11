@@ -284,11 +284,15 @@ class CleanArchBuilderCli {
 
       if (scaffoldResult.skippedCount > 0) {
         _stdoutLogger('\n--- Integration Guide ---');
-        _stdoutLogger('It looks like some base files (e.g. main.dart) already exist.');
+        _stdoutLogger(
+            'It looks like some base files (e.g. main.dart) already exist.');
         _stdoutLogger('Please ensure your main.dart is updated to include:');
-        _stdoutLogger('1. Route Configuration: onGenerateRoute: AppRoutes.onGenerateRoute');
-        _stdoutLogger('2. Theming: theme: AppTheme.lightTheme, darkTheme: AppTheme.darkTheme');
-        _stdoutLogger('3. Dependency Injection: await initDependencies(); in main()');
+        _stdoutLogger(
+            '1. Route Configuration: onGenerateRoute: AppRoutes.onGenerateRoute');
+        _stdoutLogger(
+            '2. Theming: theme: AppTheme.lightTheme, darkTheme: AppTheme.darkTheme');
+        _stdoutLogger(
+            '3. Dependency Injection: await initDependencies(); in main()');
         _stdoutLogger('-------------------------\n');
       }
 
