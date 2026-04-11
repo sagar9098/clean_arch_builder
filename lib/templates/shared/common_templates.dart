@@ -126,7 +126,6 @@ class Get${naming.pascalCase}ItemsUseCase {
   final ${naming.pascalCase}Repository _repository;
 
   Future<Either<Failure, List<${naming.pascalCase}Entity>>> call() {
-    // Executes use case
     return _repository.get${naming.pascalCase}Items();
   }
 }
@@ -146,7 +145,6 @@ class ${naming.pascalCase}Model extends ${naming.pascalCase}Entity {
   });
 
   factory ${naming.pascalCase}Model.fromMap(Map<String, dynamic> map) {
-    // Parses model from map
     return ${naming.pascalCase}Model(
       id: map['id'].toString(),
       title: map['title'].toString(),
@@ -154,7 +152,6 @@ class ${naming.pascalCase}Model extends ${naming.pascalCase}Entity {
   }
 
   Map<String, dynamic> toMap() {
-    // Converts model to map
     return <String, dynamic>{'id': id, 'title': title};
   }
 }
@@ -185,8 +182,7 @@ class ${naming.pascalCase}Model extends ${naming.pascalCase}Entity {
         resolveDataSourceMetadata(naming, dataSourceType);
     return '''library;
 
-import 'package:dio/dio.dart';
-
+import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/result/either.dart';
 import '../../domain/entities/${naming.snakeCase}_entity.dart';
@@ -203,20 +199,23 @@ class ${naming.pascalCase}RepositoryImpl implements ${naming.pascalCase}Reposito
 
   @override
   Future<Either<Failure, List<${naming.pascalCase}Entity>>> get${naming.pascalCase}Items() async {
-    // Maps data source output to domain entities
     try {
       final List<Map<String, dynamic>> rawItems = await _dataSource.fetch${naming.pascalCase}Items();
       final List<${naming.pascalCase}Entity> entities = rawItems
           .map<${naming.pascalCase}Entity>(${naming.pascalCase}Model.fromMap)
           .toList(growable: false);
       return Right<Failure, List<${naming.pascalCase}Entity>>(entities);
-    } on DioException catch (exception) {
+    } on ServerException catch (exception) {
       return Left<Failure, List<${naming.pascalCase}Entity>>(
-        mapDioExceptionToFailure(exception),
+        ServerFailure(exception.message),
+      );
+    } on NetworkException catch (exception) {
+      return Left<Failure, List<${naming.pascalCase}Entity>>(
+        NetworkFailure(exception.message),
       );
     } catch (error) {
       return Left<Failure, List<${naming.pascalCase}Entity>>(
-        UnknownFailure('Unexpected repository error: \${error.toString()}'),
+        UnknownFailure(error.toString()),
       );
     }
   }
@@ -248,7 +247,6 @@ class ${naming.pascalCase}View extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Builds current view state
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -270,7 +268,6 @@ class ${naming.pascalCase}View extends StatelessWidget {
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (BuildContext context, int index) {
-        // Builds one list item
         final ${naming.pascalCase}Entity item = items[index];
         return ListTile(
           title: Text(item.title),
@@ -308,7 +305,6 @@ import '$stateFileImportPath';
 final GetIt sl = GetIt.instance;
 
 Future<void> init${naming.pascalCase}Dependencies() async {
-  // Registers feature dependency graph
 ${_buildApiClientRegistrationSnippet(dataSourceType)}
 ${_buildDataSourceRegistrationSnippet(metadata, dataSourceType)}
   if (!sl.isRegistered<${naming.pascalCase}Repository>()) {
@@ -404,9 +400,8 @@ class ${naming.pascalCase}RestDataSource {
   final ApiClient _apiClient;
 
   Future<List<Map<String, dynamic>>> fetch${naming.pascalCase}Items() async {
-    // Fetches remote items
     final String endpointPath = '\${AppConfig.apiVersion}/${naming.snakeCase}';
-    final Response<dynamic> response = await _apiClient.dio.get(endpointPath);
+    final Response<dynamic> response = await _apiClient.get<dynamic>(endpointPath);
     final dynamic data = response.data;
     if (data is List) {
       return data
@@ -433,7 +428,6 @@ class ${naming.pascalCase}FirebaseDataSource {
   const ${naming.pascalCase}FirebaseDataSource();
 
   Future<List<Map<String, dynamic>>> fetch${naming.pascalCase}Items() async {
-    // Throws when firebase source is unconfigured
     throw UnsupportedError('Firebase source is not configured.');
   }
 }
@@ -448,7 +442,6 @@ class ${naming.pascalCase}LocalDataSource {
   const ${naming.pascalCase}LocalDataSource();
 
   Future<List<Map<String, dynamic>>> fetch${naming.pascalCase}Items() async {
-    // Throws when local source is unconfigured
     throw UnsupportedError('Local source is not configured.');
   }
 }
